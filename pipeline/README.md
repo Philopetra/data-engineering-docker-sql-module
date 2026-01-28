@@ -1,43 +1,21 @@
-# Data-engineering-docker-sql-module
-DataTalksClub Data Engineering Zoomcamp Module1 Assignment on docker and Sql
+Change your directory to the pipeline directory using 
 
-
-# NYC Taxi Data Pipeline
-
-This repository contains a Python-based ingestion pipeline for NYC Taxi data (supporting both CSV and Parquet formats) and the SQL queries for data analysis.
-
----
-
-## Setup Instructions
-
-Change your directory to the pipeline directory using:
-
-```bash
 cd pipeline/
 
-```
 
-## This fires up the docker-compose.yaml file (Postgres & pgAdmin)
+From your terminal run the following commands in the following order
 
-```bash
-docker-compose up
-```
+docker-compose up # This fires up the docker-compose.yaml file
 
-## This builds the ingestion image based on the Dockerfile
+docker build -t taxi_ingest:v001 . # This builds an image based on the entry script on the docker file.
 
-```bash
-docker build -t taxi_ingest:v001 .
-```
 
-# Ingestion Commands
+Then you ingest your data from the url into a pgDatabase using these commands. 
 
-These commands ingest data from the web into your PostgreSQL database based on the service type.
+# These command are solely based on conditions in the ingest_data.py file.
 
----
+For Yellow Taxi (CSV)
 
-## To Ingest Yellow Taxi Data (CSV)
-
-```bash
 docker run -it --rm \
   --network=pipeline_default \
   taxi_ingest:v001 \
@@ -51,11 +29,9 @@ docker run -it --rm \
     --month=3 \
     --target-table=yellow_taxi_trips_2021_03 \
     --chunksize=100000
-```
 
-## To Ingest Green Taxi Data (Parquet)
+For Green Taxi (Parquet)
 
-```bash
 docker run -it --rm \
   --network=pipeline_default \
   taxi_ingest:v001 \
@@ -68,11 +44,9 @@ docker run -it --rm \
     --year=2025 \
     --month=11 \
     --target-table=green_taxi_trips_2025_11
-```
 
-## Ingest Taxi Zones (Lookup CSV)
+For Taxi Zones (Lookup CSV)
 
-```bash
 docker run -it --rm \
   --network=pipeline_default \
   taxi_ingest:v001 \
@@ -83,36 +57,25 @@ docker run -it --rm \
     --pg-db=ny_taxi \
     --service=zones \
     --target-table=taxi_zone_lookup
-```
 
 
-# Homework Solutions
+Question 1. What's the version of pip in the python:3.13 image? (1 point)
 
----
-
-## Question 1. What's the version of pip in the python:3.13 image?
-
-```bash
+Bash Solution command 
 pip -V
-```
 
 
-## Question 3. For the trips in November 2025, how many trips had a trip_distance of less than or equal to 1 mile?
+Question 3. For the trips in November 2025, how many trips had a trip_distance of less than or equal to 1 mile?
 
-```sql
-SELECT 
-    COUNT(*) AS total_short_trips
-FROM 
-    green_taxi_trips_2025_11
-WHERE 
-    trip_distance <= 1.0;
+SQL COMMAND
 
-```
+SELECT COUNT(*)
+FROM green_taxi_trips_2025_11
+WHERE trip_distance <= 1.0;
 
 
-## Question 4. Which was the pick up day with the longest trip distance? Only consider trips with trip_distance less than 100 miles.
+Question 4. Which was the pick up day with the longest trip distance? Only consider trips with trip_distance less than 100 miles.
 
-```sql
 SELECT 
     CAST(lpep_pickup_datetime AS DATE) AS pickup_day,
     MAX(trip_distance) AS longest_distance
@@ -121,11 +84,11 @@ WHERE trip_distance < 100.0
 GROUP BY pickup_day
 ORDER BY longest_distance DESC
 LIMIT 1;
-```
 
-## Question 5. Which was the pickup zone with the largest total_amount (sum of all trips) on November 18th, 2025?
 
-```sql
+Question 5. Which was the pickup zone with the largest total_amount (sum of all trips) on November 18th, 2025?
+
+
 SELECT 
     tz."Zone",
     SUM(gt.total_amount) AS total_revenue
@@ -140,11 +103,10 @@ GROUP BY
 ORDER BY 
     total_revenue DESC
 LIMIT 1;
-```
 
-## Question 6. For the passengers picked up in the zone named "East Harlem North" in November 2025, which was the drop off zone that had the largest tip?
 
-```sql
+Question 6. For the passengers picked up in the zone named "East Harlem North" in November 2025, which was the drop off zone that had the largest tip?
+
 SELECT 
     tz_do."Zone" AS dropoff_zone,
     MAX(gt.tip_amount) AS largest_tip
@@ -161,4 +123,3 @@ GROUP BY
 ORDER BY 
     largest_tip DESC
 LIMIT 1;
-```
